@@ -13,12 +13,25 @@ import pyaudio
 import wave
 import contextlib
 
+# Custom color scheme
+COLORS = {
+    "primary_red": "#C41E3A",      # Cardinal red - primary color
+    "secondary_red": "#8B0000",    # Dark red for accents
+    "light_red": "#FF6B6B",        # Light red for highlights
+    "white": "#FFFFFF",            # White
+    "light_gray": "#F5F5F5",       # Light gray for backgrounds
+    "dark_gray": "#333333",        # Dark gray for text
+    "border_gray": "#E0E0E0",      # Border color for separation
+    "hover_red": "#D32C47"         # Slightly lighter red for hover effects
+}
+
 class LiveTranscriptorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Live Voice Transcriptor")
-        self.root.geometry("800x600")
+        self.root.geometry("750x850")
         self.root.resizable(True, True)
+        self.root.configure(bg=COLORS["white"])
         
         # Recording state
         self.is_recording = False
@@ -47,6 +60,9 @@ class LiveTranscriptorApp:
         self.whisper_model_name = "tiny"  # Default to tiny for faster processing
         self.language = "en"  # Set English as the default language
         
+        # Configure styles
+        self.configure_styles()
+        
         # Create UI
         self.create_widgets()
         
@@ -54,6 +70,81 @@ class LiveTranscriptorApp:
         self.load_whisper_model_thread = threading.Thread(target=self.load_whisper_model)
         self.load_whisper_model_thread.daemon = True
         self.load_whisper_model_thread.start()
+    
+    def configure_styles(self):
+        # Create custom styles for widgets
+        self.style = ttk.Style()
+        
+        # Configure frame styles
+        self.style.configure("Main.TFrame", background=COLORS["white"])
+        self.style.configure("Card.TFrame", background=COLORS["white"], 
+                            relief="raised", borderwidth=1)
+        
+        # Configure label styles
+        self.style.configure("Title.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["primary_red"], 
+                            font=("Segoe UI", 18, "bold"))
+        
+        self.style.configure("Subtitle.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["secondary_red"], 
+                            font=("Segoe UI", 12))
+        
+        self.style.configure("Settings.TLabelframe", 
+                            background=COLORS["white"],
+                            foreground=COLORS["primary_red"])
+        
+        self.style.configure("Settings.TLabelframe.Label", 
+                            background=COLORS["white"],
+                            foreground=COLORS["primary_red"],
+                            font=("Segoe UI", 11, "bold"))
+        
+        self.style.configure("Status.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["white"], 
+                            font=("Segoe UI", 10))
+        
+        # Configure button styles
+        self.style.configure("TButton", 
+                            font=("Segoe UI", 11))
+        
+        # Button hover effect - update to red with white text
+        self.style.map("TButton",
+                       background=[("active", COLORS["hover_red"])],
+                       foreground=[("active", COLORS["white"])])
+        
+        # Record button style
+        self.style.configure("Record.TButton", 
+                            background=COLORS["primary_red"], 
+                            foreground=COLORS["primary_red"],
+                            font=("Segoe UI", 12, "bold"))
+        
+        # Record button hover effect
+        self.style.map("Record.TButton",
+                      background=[("active", COLORS["hover_red"])],
+                      foreground=[("active", COLORS["primary_red"])])
+        
+        # Clear button style - Updated to match Record button colors
+        self.style.configure("Clear.TButton", 
+                            background=COLORS["primary_red"], 
+                            foreground=COLORS["primary_red"],
+                            font=("Segoe UI", 11))
+        
+        # Clear button hover effect
+        self.style.map("Clear.TButton",
+                      background=[("active", COLORS["hover_red"])],
+                      foreground=[("active", COLORS["primary_red"])])
+        
+        # Configure labelframe styles
+        self.style.configure("Transcription.TLabelframe", 
+                           background=COLORS["white"],
+                           foreground=COLORS["secondary_red"])
+        
+        self.style.configure("Transcription.TLabelframe.Label", 
+                           background=COLORS["white"],
+                           foreground=COLORS["secondary_red"],
+                           font=("Segoe UI", 11, "bold"))
     
     def load_whisper_model(self):
         try:
@@ -66,22 +157,28 @@ class LiveTranscriptorApp:
     
     def create_widgets(self):
         # Main frame
-        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame = ttk.Frame(self.root, style="Main.TFrame", padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Title
-        title_label = ttk.Label(main_frame, text="Live Voice Transcriptor", font=("Arial", 16, "bold"))
+        title_label = ttk.Label(main_frame, text="Live Voice Transcriptor", style="Title.TLabel")
         title_label.pack(pady=10)
         
+        subtitle_label = ttk.Label(main_frame, 
+                                text="Transcribe your voice in real-time as you speak", 
+                                style="Subtitle.TLabel")
+        subtitle_label.pack(pady=(0, 15))
+        
         # Settings frame
-        settings_frame = ttk.LabelFrame(main_frame, text="Settings", padding="10")
+        settings_frame = ttk.LabelFrame(main_frame, text="Settings", padding="10", style="Settings.TLabelframe")
         settings_frame.pack(fill=tk.X, pady=10)
         
         # Whisper model selection
-        model_frame = ttk.Frame(settings_frame)
+        model_frame = ttk.Frame(settings_frame, style="Main.TFrame")
         model_frame.pack(fill=tk.X, pady=5)
         
-        model_label = ttk.Label(model_frame, text="Whisper Model:")
+        model_label = ttk.Label(model_frame, text="Whisper Model:", background=COLORS["white"], 
+                             foreground=COLORS["dark_gray"], font=("Segoe UI", 10))
         model_label.pack(side=tk.LEFT, padx=(0, 10))
         
         self.model_var = tk.StringVar(value="tiny")
@@ -111,40 +208,47 @@ class LiveTranscriptorApp:
         dual_engine_check.pack(anchor=tk.W, pady=5)
         
         # Status frame
-        status_frame = ttk.Frame(main_frame)
+        status_frame = ttk.Frame(main_frame, style="Main.TFrame")
         status_frame.pack(fill=tk.X, pady=10)
         
         # Status label
         self.status_var = tk.StringVar(value="Loading Whisper model...")
-        status_label = ttk.Label(status_frame, textvariable=self.status_var)
+        status_label = ttk.Label(status_frame, textvariable=self.status_var, style="Status.TLabel")
         status_label.pack(anchor=tk.W, pady=5)
         
         # Transcription display
-        transcription_frame = ttk.LabelFrame(main_frame, text="Transcription", padding="10")
+        transcription_frame = ttk.LabelFrame(main_frame, text="Transcription", 
+                                          padding="10", style="Transcription.TLabelframe")
         transcription_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
         # Whisper transcription
-        whisper_frame = ttk.LabelFrame(transcription_frame, text="Whisper Transcription", padding="10")
+        whisper_frame = ttk.LabelFrame(transcription_frame, text="Whisper Transcription", 
+                                    padding="10", style="Transcription.TLabelframe")
         whisper_frame.pack(fill=tk.BOTH, expand=True, side=tk.LEFT, padx=(0, 5))
         
-        self.whisper_text = tk.Text(whisper_frame, wrap=tk.WORD, width=40, height=10)
+        self.whisper_text = tk.Text(whisper_frame, wrap=tk.WORD, width=40, height=10,
+                                 background=COLORS["light_gray"], foreground=COLORS["primary_red"],
+                                 borderwidth=1, relief="solid")
         self.whisper_text.pack(fill=tk.BOTH, expand=True)
         whisper_scrollbar = ttk.Scrollbar(self.whisper_text, command=self.whisper_text.yview)
         self.whisper_text.configure(yscrollcommand=whisper_scrollbar.set)
         whisper_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Sphinx transcription
-        sphinx_frame = ttk.LabelFrame(transcription_frame, text="Sphinx Transcription", padding="10")
+        sphinx_frame = ttk.LabelFrame(transcription_frame, text="Sphinx Transcription", 
+                                   padding="10", style="Transcription.TLabelframe")
         sphinx_frame.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT, padx=(5, 0))
         
-        self.sphinx_text = tk.Text(sphinx_frame, wrap=tk.WORD, width=40, height=10)
+        self.sphinx_text = tk.Text(sphinx_frame, wrap=tk.WORD, width=40, height=10,
+                                background=COLORS["light_gray"], foreground=COLORS["primary_red"],
+                                borderwidth=1, relief="solid")
         self.sphinx_text.pack(fill=tk.BOTH, expand=True)
         sphinx_scrollbar = ttk.Scrollbar(self.sphinx_text, command=self.sphinx_text.yview)
         self.sphinx_text.configure(yscrollcommand=sphinx_scrollbar.set)
         sphinx_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Control buttons frame
-        control_frame = ttk.Frame(main_frame)
+        control_frame = ttk.Frame(main_frame, style="Main.TFrame")
         control_frame.pack(fill=tk.X, pady=10)
         
         # Start/Stop button
@@ -160,13 +264,21 @@ class LiveTranscriptorApp:
         self.clear_button = ttk.Button(
             control_frame,
             text="Clear Transcription",
-            command=self.clear_transcription
+            command=self.clear_transcription,
+            style="Clear.TButton"
         )
         self.clear_button.pack(pady=10)
         
-        # Create custom button style
-        button_style = ttk.Style()
-        button_style.configure("Record.TButton", font=("Arial", 12, "bold"))
+        # Footer
+        footer_frame = ttk.Frame(main_frame, style="Main.TFrame")
+        footer_frame.pack(fill=tk.X, pady=10)
+        
+        footer_text = "Powered by OpenAI Whisper and CMU Sphinx • ItsAeox • 2025"
+        footer_label = ttk.Label(footer_frame, text=footer_text, 
+                              background=COLORS["white"],
+                              foreground=COLORS["secondary_red"],
+                              font=("Segoe UI", 9))
+        footer_label.pack(side=tk.BOTTOM, pady=(10, 0))
     
     def change_whisper_model(self):
         if self.whisper_model_name != self.model_var.get():

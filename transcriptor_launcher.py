@@ -210,7 +210,7 @@ class TranscriptorLauncherApp:
         footer_frame = ttk.Frame(main_frame, style="Main.TFrame")
         footer_frame.pack(fill=tk.X, pady=10)
         
-        footer_text = "Powered by OpenAI Whisper and CMU Sphinx • English language optimized"
+        footer_text = "Powered by OpenAI Whisper and CMU Sphinx • ItsAeox • 2025"
         footer_label = ttk.Label(footer_frame, text=footer_text, style="Footer.TLabel", justify="center")
         footer_label.pack(side=tk.BOTTOM)
     
