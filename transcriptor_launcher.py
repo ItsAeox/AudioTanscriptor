@@ -1,8 +1,20 @@
 import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, font
 import importlib.util
 import sys
+
+# Custom color scheme
+COLORS = {
+    "primary_red": "#C41E3A",      # Cardinal red - primary color
+    "secondary_red": "#8B0000",    # Dark red for accents
+    "light_red": "#FF6B6B",        # Light red for highlights
+    "white": "#FFFFFF",            # White
+    "light_gray": "#F5F5F5",       # Light gray for backgrounds
+    "dark_gray": "#333333",        # Dark gray for text
+    "border_gray": "#E0E0E0",      # Border color for separation
+    "hover_red": "#D32C47"         # Slightly lighter red for hover effects
+}
 
 def launch_audio_transcriptor():
     # Load the audio_transcriptor.py module dynamically
@@ -56,100 +68,208 @@ def launch_live_transcriptor():
 class TranscriptorLauncherApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Transcriptor Launcher")
-        self.root.geometry("450x400")
+        self.root.title("Transcriptor Suite")
+        self.root.geometry("650x950")
         self.root.resizable(True, True)
+        self.root.configure(bg=COLORS["white"])
         
+        # Set icon if available
+        try:
+            self.root.iconbitmap("icon.ico")
+        except:
+            pass
+        
+        # Configure styles
+        self.configure_styles()
+        
+        # Create widgets
         self.create_widgets()
     
+    def configure_styles(self):
+        # Create custom styles for widgets
+        self.style = ttk.Style()
+        
+        # Configure frame styles
+        self.style.configure("Main.TFrame", background=COLORS["white"])
+        self.style.configure("Card.TFrame", background=COLORS["light_gray"], 
+                            relief="raised", borderwidth=1)
+        
+        # Configure label styles
+        self.style.configure("Title.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["primary_red"], 
+                            font=("Segoe UI", 24, "bold"))
+        
+        self.style.configure("Subtitle.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["secondary_red"], 
+                            font=("Segoe UI", 14))
+        
+        self.style.configure("CardTitle.TLabel", 
+                            background=COLORS["light_gray"], 
+                            foreground=COLORS["primary_red"], 
+                            font=("Segoe UI", 14, "bold"))
+        
+        self.style.configure("CardDesc.TLabel", 
+                            background=COLORS["light_gray"], 
+                            foreground=COLORS["dark_gray"], 
+                            font=("Segoe UI", 10))
+        
+        self.style.configure("Footer.TLabel", 
+                            background=COLORS["white"], 
+                            foreground=COLORS["secondary_red"], 
+                            font=("Segoe UI", 9))
+        
+        # Configure button styles
+        self.style.configure("TButton", 
+                            background=COLORS["primary_red"], 
+                            foreground=COLORS["primary_red"],
+                            font=("Segoe UI", 11))
+        
+        # Button hover effect
+        self.style.map("TButton",
+                       background=[("active", COLORS["hover_red"])],
+                       foreground=[("active", COLORS["primary_red"])])
+        
+        # New feature button style
+        self.style.configure("New.TButton", 
+                            background=COLORS["secondary_red"], 
+                            foreground=COLORS["primary_red"],
+                            font=("Segoe UI", 11, "bold"))
+        
+        # New feature button hover effect
+        self.style.map("New.TButton",
+                      background=[("active", COLORS["primary_red"])],
+                      foreground=[("active", COLORS["primary_red"])])
+    
     def create_widgets(self):
-        # Main frame
-        main_frame = ttk.Frame(self.root, padding="20")
+        # Main container frame
+        main_frame = ttk.Frame(self.root, style="Main.TFrame", padding=20)
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Title
-        title_label = ttk.Label(main_frame, text="Transcriptor App Suite", font=("Arial", 16, "bold"))
-        title_label.pack(pady=10)
+        # Header section
+        header_frame = ttk.Frame(main_frame, style="Main.TFrame")
+        header_frame.pack(fill=tk.X, pady=(0, 20))
         
-        # Description
-        description = ttk.Label(main_frame, text="Choose which transcriptor you want to use:", font=("Arial", 11))
-        description.pack(pady=20)
+        title_label = ttk.Label(header_frame, text="TRANSCRIPTOR SUITE", 
+                              style="Title.TLabel")
+        title_label.pack(pady=(10, 5))
         
-        # Buttons frame
-        buttons_frame = ttk.Frame(main_frame)
-        buttons_frame.pack(pady=20)
+        subtitle_label = ttk.Label(header_frame, text="Advanced Audio & Video Transcription", 
+                                 style="Subtitle.TLabel")
+        subtitle_label.pack(pady=(0, 10))
         
-        # Audio Transcriptor Button
-        audio_button = ttk.Button(
-            buttons_frame, 
-            text="Audio Transcriptor", 
-            command=self.open_audio_transcriptor,
-            width=30
+        # Description section
+        desc_frame = ttk.Frame(main_frame, style="Main.TFrame")
+        desc_frame.pack(fill=tk.X, pady=10)
+        
+        description_text = """
+        Welcome to the Transcriptor Suite! This application provides powerful tools 
+        for converting spoken language into text using state-of-the-art AI models.
+        Choose one of the options below to begin:
+        """
+        
+        desc_label = ttk.Label(desc_frame, text=description_text, 
+                             background=COLORS["white"],
+                             foreground=COLORS["dark_gray"],
+                             font=("Segoe UI", 11),
+                             wraplength=550,
+                             justify="center")
+        desc_label.pack(pady=10)
+        
+        # App cards section
+        cards_frame = ttk.Frame(main_frame, style="Main.TFrame")
+        cards_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        # Audio Transcriptor card
+        self.create_app_card(
+            cards_frame,
+            "Audio Transcriptor",
+            "Convert audio files to text with high accuracy.\nSupports various audio formats.",
+            self.open_audio_transcriptor
         )
-        audio_button.pack(pady=10)
         
-        # Audio description
-        audio_desc = ttk.Label(buttons_frame, text="Transcribe audio files using Whisper or Sphinx")
-        audio_desc.pack(pady=(0, 10))
-        
-        # Video Transcriptor Button
-        video_button = ttk.Button(
-            buttons_frame, 
-            text="Video Transcriptor", 
-            command=self.open_video_transcriptor,
-            width=30
+        # Video Transcriptor card
+        self.create_app_card(
+            cards_frame,
+            "Video Transcriptor",
+            "Extract and transcribe audio from video files.\nSupports popular video formats.",
+            self.open_video_transcriptor
         )
-        video_button.pack(pady=10)
         
-        # Video description
-        video_desc = ttk.Label(buttons_frame, text="Extract audio from videos and transcribe it")
-        video_desc.pack(pady=(0, 10))
-        
-        # Live Transcription Button
-        live_button = ttk.Button(
-            buttons_frame, 
-            text="Live Voice Transcriptor", 
-            command=self.open_live_transcriptor,
-            width=30,
-            style="New.TButton"
+        # Live Transcriptor card
+        self.create_app_card(
+            cards_frame,
+            "Live Voice Transcriptor",
+            "Transcribe your voice in real-time as you speak.\nCompare multiple transcription engines.",
+            self.open_live_transcriptor,
+            is_new=True
         )
-        live_button.pack(pady=10)
-        
-        # Live description
-        live_desc = ttk.Label(buttons_frame, text="Transcribe your voice in real-time")
-        live_desc.pack(pady=(0, 10))
-        
-        # Create a custom style for the new button
-        button_style = ttk.Style()
-        button_style.configure("New.TButton", font=("Arial", 11, "bold"))
         
         # Footer
-        footer_text = "All transcriptors use OpenAI Whisper and/or CMU Sphinx"
-        footer = ttk.Label(main_frame, text=footer_text, justify=tk.CENTER)
-        footer.pack(side=tk.BOTTOM, pady=10)
+        footer_frame = ttk.Frame(main_frame, style="Main.TFrame")
+        footer_frame.pack(fill=tk.X, pady=10)
+        
+        footer_text = "Powered by OpenAI Whisper and CMU Sphinx • English language optimized"
+        footer_label = ttk.Label(footer_frame, text=footer_text, style="Footer.TLabel", justify="center")
+        footer_label.pack(side=tk.BOTTOM)
+    
+    def create_app_card(self, parent, title, description, command, is_new=False):
+        # Card container
+        card_frame = ttk.Frame(parent, style="Card.TFrame", padding=15)
+        card_frame.pack(fill=tk.X, pady=10, ipady=10)
+        
+        # Content area
+        content_frame = ttk.Frame(card_frame, style="Card.TFrame")
+        content_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Title row
+        title_frame = ttk.Frame(content_frame, style="Card.TFrame")
+        title_frame.pack(fill=tk.X, anchor="w")
+        
+        title_label = ttk.Label(title_frame, text=title, style="CardTitle.TLabel")
+        title_label.pack(side=tk.LEFT)
+        
+        if is_new:
+            new_tag = tk.Label(
+                title_frame, 
+                text="NEW", 
+                bg=COLORS["light_red"],
+                fg=COLORS["white"],
+                padx=5,
+                pady=1,
+                font=("Segoe UI", 8, "bold")
+            )
+            new_tag.pack(side=tk.LEFT, padx=(10, 0))
+        
+        # Description
+        desc_label = ttk.Label(content_frame, text=description, style="CardDesc.TLabel", wraplength=500)
+        desc_label.pack(pady=(5, 15), anchor="w")
+        
+        # Button
+        button_style = "New.TButton" if is_new else "TButton"
+        launch_button = ttk.Button(
+            content_frame,
+            text="Launch Application",
+            command=command,
+            style=button_style,
+            width=25
+        )
+        launch_button.pack(pady=(0, 5))
     
     def open_audio_transcriptor(self):
-        # Close the launcher window
         self.root.destroy()
-        # Open the audio transcriptor
         launch_audio_transcriptor()
     
     def open_video_transcriptor(self):
-        # Close the launcher window
         self.root.destroy()
-        # Open the video transcriptor
         launch_video_transcriptor()
     
     def open_live_transcriptor(self):
-        # Close the launcher window
         self.root.destroy()
-        # Open the live transcriptor
         launch_live_transcriptor()
 
-def main():
+if __name__ == "__main__":
     root = tk.Tk()
     app = TranscriptorLauncherApp(root)
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
