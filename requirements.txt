@@ -1,0 +1,7 @@
+SpeechRecognition>=3.8.1
+moviepy>=1.0.3
+PyAudio>=0.2.11
+pydub>=0.25.1
+pocketsphinx>=0.1.15
+openai-whisper
+torch
