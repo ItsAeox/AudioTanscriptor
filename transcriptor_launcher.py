@@ -36,11 +36,28 @@ def launch_video_transcriptor():
     app = video_module.VideoTranscriptorApp(root)
     root.mainloop()
 
+def launch_live_transcriptor():
+    # Load the live_transcriptor.py module dynamically
+    live_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                                 "live_transcriptor", "live_transcriptor.py")
+    
+    # Import the module dynamically
+    spec = importlib.util.spec_from_file_location("live_transcriptor", live_file_path)
+    live_module = importlib.util.module_from_spec(spec)
+    sys.modules["live_transcriptor"] = live_module
+    spec.loader.exec_module(live_module)
+    
+    # Create a new window and application
+    root = tk.Tk()
+    app = live_module.LiveTranscriptorApp(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_closing)
+    root.mainloop()
+
 class TranscriptorLauncherApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Transcriptor Launcher")
-        self.root.geometry("400x300")
+        self.root.geometry("450x400")
         self.root.resizable(True, True)
         
         self.create_widgets()
@@ -51,37 +68,63 @@ class TranscriptorLauncherApp:
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Title
-        title_label = ttk.Label(main_frame, text="Transcriptor App", font=("Arial", 16, "bold"))
+        title_label = ttk.Label(main_frame, text="Transcriptor App Suite", font=("Arial", 16, "bold"))
         title_label.pack(pady=10)
         
         # Description
-        description = ttk.Label(main_frame, text="Choose which transcriptor you want to use:")
+        description = ttk.Label(main_frame, text="Choose which transcriptor you want to use:", font=("Arial", 11))
         description.pack(pady=20)
         
         # Buttons frame
         buttons_frame = ttk.Frame(main_frame)
         buttons_frame.pack(pady=20)
         
-        # Audio Transcriptor Button - this now launches a standalone window
+        # Audio Transcriptor Button
         audio_button = ttk.Button(
             buttons_frame, 
             text="Audio Transcriptor", 
             command=self.open_audio_transcriptor,
-            width=20
+            width=30
         )
         audio_button.pack(pady=10)
         
-        # Video Transcriptor Button - this now launches a standalone window
+        # Audio description
+        audio_desc = ttk.Label(buttons_frame, text="Transcribe audio files using Whisper or Sphinx")
+        audio_desc.pack(pady=(0, 10))
+        
+        # Video Transcriptor Button
         video_button = ttk.Button(
             buttons_frame, 
             text="Video Transcriptor", 
             command=self.open_video_transcriptor,
-            width=20
+            width=30
         )
         video_button.pack(pady=10)
         
+        # Video description
+        video_desc = ttk.Label(buttons_frame, text="Extract audio from videos and transcribe it")
+        video_desc.pack(pady=(0, 10))
+        
+        # Live Transcription Button
+        live_button = ttk.Button(
+            buttons_frame, 
+            text="Live Voice Transcriptor", 
+            command=self.open_live_transcriptor,
+            width=30,
+            style="New.TButton"
+        )
+        live_button.pack(pady=10)
+        
+        # Live description
+        live_desc = ttk.Label(buttons_frame, text="Transcribe your voice in real-time")
+        live_desc.pack(pady=(0, 10))
+        
+        # Create a custom style for the new button
+        button_style = ttk.Style()
+        button_style.configure("New.TButton", font=("Arial", 11, "bold"))
+        
         # Footer
-        footer_text = "Audio transcriptor works with .wav, .mp3, .flac files\nVideo transcriptor extracts audio from video files"
+        footer_text = "All transcriptors use OpenAI Whisper and/or CMU Sphinx"
         footer = ttk.Label(main_frame, text=footer_text, justify=tk.CENTER)
         footer.pack(side=tk.BOTTOM, pady=10)
     
@@ -96,6 +139,12 @@ class TranscriptorLauncherApp:
         self.root.destroy()
         # Open the video transcriptor
         launch_video_transcriptor()
+    
+    def open_live_transcriptor(self):
+        # Close the launcher window
+        self.root.destroy()
+        # Open the live transcriptor
+        launch_live_transcriptor()
 
 def main():
     root = tk.Tk()

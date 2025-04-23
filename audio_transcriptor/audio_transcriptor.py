@@ -87,11 +87,6 @@ class AudioTranscriptorApp:
                                      variable=self.model_var, value="small")
         small_radio.pack(side=tk.LEFT, padx=5)
         
-        # Google radio
-        google_radio = ttk.Radiobutton(engine_frame, text="Google Speech Recognition (Online)", 
-                                      variable=self.engine_var, value="google")
-        google_radio.pack(anchor=tk.W, pady=2)
-        
         # Sphinx radio
         sphinx_radio = ttk.Radiobutton(engine_frame, text="CMU Sphinx (Offline)", 
                                       variable=self.engine_var, value="sphinx")
@@ -222,20 +217,23 @@ class AudioTranscriptorApp:
                 self.status_var.set("Transcribing with Whisper (this may take a few minutes)...")
                 self.root.update_idletasks()
                 
-                # Transcribe directly with Whisper
-                result = model.transcribe(self.audio_path)
+                # Transcribe directly with Whisper - optimize for English
+                result = model.transcribe(
+                    self.audio_path,
+                    language="en",      # Specify English language
+                    task="transcribe"   # Explicitly set to transcription task
+                )
                 
                 self.progress_var.set(80)
                 self.status_var.set("Whisper transcription completed!")
                 
                 text = result["text"]
                 
-            else:
+            else:  # Sphinx
                 # Initialize speech recognition with improved settings
                 recognizer = sr.Recognizer()
-                # Adjust recognition parameters for better accuracy
-                recognizer.energy_threshold = 300  # Increase energy threshold
-                recognizer.pause_threshold = 0.8   # Adjust pause threshold
+                recognizer.energy_threshold = 300
+                recognizer.pause_threshold = 0.8
                 recognizer.dynamic_energy_threshold = True
                 
                 file_extension = os.path.splitext(self.audio_path)[1].lower()
@@ -290,40 +288,24 @@ class AudioTranscriptorApp:
                     raise Exception(f"Error reading audio file: {str(e)}")
                 
                 self.progress_var.set(50)
-                self.status_var.set("Converting speech to text...")
+                self.status_var.set("Converting speech to text with Sphinx...")
                 self.root.update_idletasks()
                 
-                # Convert speech to text with improved settings
+                # Convert speech to text with Sphinx
                 text = ""
                 error_messages = []
                 
-                if engine == "google":
-                    try:
-                        # Use language parameter for better accuracy
-                        text = recognizer.recognize_google(
-                            audio_data, 
-                            language="en-US",  # Specify language
-                            show_all=False     # Get best result only
-                        )
-                        self.status_var.set("Google Speech Recognition completed")
-                    except sr.UnknownValueError:
-                        error_messages.append("Google Speech Recognition could not understand the audio")
-                    except sr.RequestError as e:
-                        error_messages.append(f"Could not request results from Google Speech Recognition service; {e}")
-                
-                elif engine == "sphinx":
-                    try:
-                        # Configure Sphinx for better accuracy
-                        text = recognizer.recognize_sphinx(
-                            audio_data,
-                            keyword_entries=[],  # Add domain-specific keywords if needed
-                            grammar=None
-                        )
-                        self.status_var.set("CMU Sphinx completed")
-                    except sr.UnknownValueError:
-                        error_messages.append("Sphinx could not understand the audio")
-                    except sr.RequestError as e:
-                        error_messages.append(f"Sphinx error; {e}")
+                try:
+                    # Configure Sphinx for better accuracy with English specifically
+                    text = recognizer.recognize_sphinx(
+                        audio_data,
+                        language="en-US"  # Specify American English
+                    )
+                    self.status_var.set("CMU Sphinx completed")
+                except sr.UnknownValueError:
+                    error_messages.append("Sphinx could not understand the audio")
+                except sr.RequestError as e:
+                    error_messages.append(f"Sphinx error; {e}")
                 
                 # If we didn't get any transcription, raise an error
                 if not text:

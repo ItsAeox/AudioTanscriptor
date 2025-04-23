@@ -87,14 +87,7 @@ class VideoTranscriptorApp:
                                      variable=self.model_var, value="small")
         small_radio.pack(side=tk.LEFT, padx=5)
         
-        legacy_label = ttk.Label(engine_frame, text="Legacy Engines:")
-        legacy_label.pack(anchor=tk.W, pady=(10, 2))
-        
-        # Legacy engines
-        google_radio = ttk.Radiobutton(engine_frame, text="Google Speech Recognition (Online)", 
-                                      variable=self.engine_var, value="google")
-        google_radio.pack(anchor=tk.W, pady=2)
-        
+        # Sphinx radio
         sphinx_radio = ttk.Radiobutton(engine_frame, text="CMU Sphinx (Offline)", 
                                       variable=self.engine_var, value="sphinx")
         sphinx_radio.pack(anchor=tk.W, pady=2)
@@ -211,15 +204,19 @@ class VideoTranscriptorApp:
                 self.status_var.set("Transcribing with Whisper (this may take a few minutes)...")
                 self.root.update_idletasks()
                 
-                # Transcribe directly with Whisper
-                result = model.transcribe(audio_path)
+                # Transcribe directly with Whisper - optimize for English
+                result = model.transcribe(
+                    audio_path,
+                    language="en",      # Specify English language
+                    task="transcribe"   # Explicitly set to transcription task
+                )
                 
                 self.progress_var.set(80)
                 self.status_var.set("Whisper transcription completed!")
                 
                 text = result["text"]
                 
-            else:
+            else:  # Sphinx
                 self.status_var.set("Audio extracted. Adjusting audio settings...")
                 self.root.update_idletasks()
                 
@@ -244,30 +241,24 @@ class VideoTranscriptorApp:
                     audio_data = recognizer.record(source)
                 
                 self.progress_var.set(70)
-                self.status_var.set("Converting speech to text...")
+                self.status_var.set("Converting speech to text with Sphinx...")
                 self.root.update_idletasks()
                 
-                # Convert speech to text using multiple engines
+                # Convert speech to text using Sphinx
                 text = ""
                 error_messages = []
                 
-                if engine == "google":
-                    try:
-                        text_google = recognizer.recognize_google(audio_data, language="en-US")
-                        text = f"Google Recognition:\n{text_google}"
-                    except sr.UnknownValueError:
-                        error_messages.append("Google Speech Recognition could not understand the audio")
-                    except sr.RequestError as e:
-                        error_messages.append(f"Could not request results from Google Speech Recognition service; {e}")
-                
-                elif engine == "sphinx":
-                    try:
-                        text_sphinx = recognizer.recognize_sphinx(audio_data)
-                        text = f"Sphinx Recognition:\n{text_sphinx}"
-                    except sr.UnknownValueError:
-                        error_messages.append("Sphinx could not understand the audio")
-                    except sr.RequestError as e:
-                        error_messages.append(f"Sphinx error; {e}")
+                try:
+                    # Configure Sphinx specifically for English
+                    text_sphinx = recognizer.recognize_sphinx(
+                        audio_data,
+                        language="en-US"  # Specify American English
+                    )
+                    text = f"Sphinx Recognition:\n{text_sphinx}"
+                except sr.UnknownValueError:
+                    error_messages.append("Sphinx could not understand the audio")
+                except sr.RequestError as e:
+                    error_messages.append(f"Sphinx error; {e}")
                 
                 # Check if we got any transcription
                 if not text:
